@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Scale, Mic, Send, Menu, ShieldAlert, FolderOpen, Users, FileText, Bot, Gavel, Sparkles, X, Terminal, Command, Volume2, VolumeX, Swords, Shield, Book, Play } from 'lucide-react';
-import { initializeGemini, sendMessageToGemini, switchAgentRole } from './services/geminiService';
-import SplashScreen from './components/SplashScreen';
-import Sidebar from './components/Sidebar';
-import Metrics from './components/Metrics';
-import Onboarding from './components/Onboarding';
-import PromptGuide from './components/PromptGuide';
-import { INITIAL_METRICS, TIMELINE_DATA, getAgentPersona, getCaseDetails, PROMPT_TEMPLATES, WITNESS_DATA } from './constants';
-import { Message, Note, AgentRole, SlashCommand, UserRole, CaseDetails, CaseMetrics, Witness } from './types';
+import { initializeGemini, sendMessageToGemini, switchAgentRole } from '../services/geminiService';
+import SplashScreen from './SplashScreen';
+import Sidebar from './Sidebar';
+import Metrics from './Metrics';
+import Onboarding from './Onboarding';
+import PromptGuide from './PromptGuide';
+import { INITIAL_METRICS, getTimelineData, getWitnessData, getAgentPersona, getCaseDetails, PROMPT_TEMPLATES } from '../constants';
+import { Message, Note, AgentRole, SlashCommand, UserRole, CaseDetails, CaseMetrics, Witness } from '../services/types';
 
 function App() {
   const [hasStarted, setHasStarted] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>('defense');
+  const [selectedCaseId, setSelectedCaseId] = useState<string>('gideon');
   const [caseDetails, setCaseDetails] = useState<CaseDetails | null>(null);
   const [turn, setTurn] = useState<'user' | 'opponent'>('user');
   
@@ -46,8 +47,8 @@ function App() {
   // Initial Greeting when simulation starts
   useEffect(() => {
     if (hasStarted && messages.length === 0 && caseDetails) {
-        // Initialize Gemini with Role
-        initializeGemini(caseDetails.userSide, 'judge');
+        // Initialize Gemini with Role & Case ID
+        initializeGemini(caseDetails.userSide, 'judge', undefined, selectedCaseId);
 
         // Play Music
         if (audioRef.current) {
@@ -90,9 +91,10 @@ function App() {
     }
   }, [inputText]);
 
-  const handleStart = (role: UserRole) => {
+  const handleStart = (role: UserRole, caseId: string) => {
       setUserRole(role);
-      setCaseDetails(getCaseDetails(role));
+      setSelectedCaseId(caseId);
+      setCaseDetails(getCaseDetails(caseId, role));
       setHasStarted(true);
   };
 
@@ -108,7 +110,7 @@ function App() {
   };
 
   const handleCallWitness = (witnessId: string) => {
-    const witness = WITNESS_DATA.find(w => w.id === witnessId);
+    const witness = getWitnessData(selectedCaseId).find(w => w.id === witnessId);
     if (witness) {
         setActiveWitness(witness);
         setActiveAgent('witness');
@@ -182,7 +184,7 @@ function App() {
       try {
           const response = await sendMessageToGemini(systemPrompt);
           setIsThinking(false);
-          const persona = getAgentPersona(agent, userRole, activeWitness);
+          const persona = getAgentPersona(agent, userRole, activeWitness, selectedCaseId);
           addMessage('ai', persona.name, response, agent);
           analyzeTurnImpact(response, agent);
           
@@ -217,7 +219,7 @@ function App() {
     try {
       const response = await sendMessageToGemini(text);
       setIsThinking(false);
-      const persona = getAgentPersona(activeAgent, userRole, activeWitness);
+      const persona = getAgentPersona(activeAgent, userRole, activeWitness, selectedCaseId);
       addMessage('ai', persona.name, response, activeAgent);
       
       // Update Metrics based on what happened
@@ -307,7 +309,7 @@ function App() {
     return <SplashScreen onStart={handleStart} />;
   }
 
-  const currentPersona = getAgentPersona(activeAgent, userRole, activeWitness);
+  const currentPersona = getAgentPersona(activeAgent, userRole, activeWitness, selectedCaseId);
 
   return (
     <div className="flex h-screen bg-bg-DEFAULT text-slate-100 font-sans overflow-hidden">
@@ -365,7 +367,8 @@ function App() {
       <div className="flex w-full pt-16 h-full relative">
         
         <Sidebar 
-            events={TIMELINE_DATA} 
+            events={getTimelineData(selectedCaseId)} 
+            witnesses={getWitnessData(selectedCaseId)}
             caseDetails={caseDetails}
             isOpen={isSidebarOpen} 
             notes={notes}

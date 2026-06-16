@@ -1,14 +1,15 @@
 import { GoogleGenAI, Chat } from "@google/genai";
 import { getAgentPersona } from "../constants";
-import { AgentRole, UserRole } from "../types";
+import { AgentRole, UserRole } from "./types";
 
 let chatSession: Chat | null = null;
 let genAI: GoogleGenAI | null = null;
 let currentAgentRole: AgentRole = 'judge';
 let currentUserSide: UserRole = 'defense';
 let currentContext: any = null;
+let currentCaseId: string = 'gideon';
 
-export const initializeGemini = (userSide: UserRole, agentRole: AgentRole = 'judge', context?: any) => {
+export const initializeGemini = (userSide: UserRole, agentRole: AgentRole = 'judge', context?: any, caseId: string = 'gideon') => {
     if (!process.env.API_KEY) {
         console.warn("API_KEY not found in environment variables.");
         return;
@@ -17,6 +18,7 @@ export const initializeGemini = (userSide: UserRole, agentRole: AgentRole = 'jud
     currentUserSide = userSide;
     currentAgentRole = agentRole;
     currentContext = context;
+    currentCaseId = caseId;
 
     try {
         genAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -29,7 +31,7 @@ export const initializeGemini = (userSide: UserRole, agentRole: AgentRole = 'jud
 const startNewSession = (agentRole: AgentRole, userSide: UserRole, context?: any) => {
     if (!genAI) return;
     
-    const persona = getAgentPersona(agentRole, userSide, context);
+    const persona = getAgentPersona(agentRole, userSide, context, currentCaseId);
 
     // Create new chat with specific agent persona
     chatSession = genAI.chats.create({
@@ -51,7 +53,7 @@ export const sendMessageToGemini = async (message: string): Promise<string> => {
     if (!chatSession) {
         return new Promise(resolve => {
             setTimeout(() => {
-                const persona = getAgentPersona(currentAgentRole, currentUserSide, currentContext);
+                const persona = getAgentPersona(currentAgentRole, currentUserSide, currentContext, currentCaseId);
                 resolve(`${persona.name} (Offline): I acknowledge: "${message}"`);
             }, 1000);
         });

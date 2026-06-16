@@ -1,5 +1,5 @@
 import React from 'react';
-import { TimelineEvent } from '../types';
+import { TimelineEvent } from '../services/types';
 import { FileText, Gavel, Scale, Search, Handshake, Paperclip, Pin } from 'lucide-react';
 
 interface TimelineProps {

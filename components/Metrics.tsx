@@ -1,5 +1,5 @@
 import React from 'react';
-import { CaseMetrics } from '../types';
+import { CaseMetrics } from '../services/types';
 import { Activity, Users, FileSearch } from 'lucide-react';
 
 const Metrics: React.FC<{ metrics: CaseMetrics }> = ({ metrics }) => {

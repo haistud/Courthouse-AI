@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { TimelineEvent, CaseDetails, Note, Witness } from '../types';
-import { WITNESS_DATA } from '../constants';
+import { TimelineEvent, CaseDetails, Note, Witness } from '../services/types';
 import { 
     FileText, Gavel, Scale, Search, Handshake, Paperclip, Pin, 
     Clock, Archive, Info, File, Shield, Plus, Trash2, Filter, Users, User, Mic
@@ -8,6 +7,7 @@ import {
 
 interface SidebarProps {
     events: TimelineEvent[];
+    witnesses: Witness[];
     caseDetails: CaseDetails;
     isOpen: boolean;
     notes: Note[];
@@ -19,7 +19,7 @@ interface SidebarProps {
 type Tab = 'timeline' | 'evidence' | 'brief' | 'witnesses';
 type EvidenceFilter = 'all' | 'pdf' | 'image' | 'document';
 
-const Sidebar: React.FC<SidebarProps> = ({ events, caseDetails, isOpen, notes, onAddNote, onDeleteNote, onCallWitness }) => {
+const Sidebar: React.FC<SidebarProps> = ({ events, witnesses, caseDetails, isOpen, notes, onAddNote, onDeleteNote, onCallWitness }) => {
     const [activeTab, setActiveTab] = useState<Tab>('timeline');
     const [evidenceFilter, setEvidenceFilter] = useState<EvidenceFilter>('all');
     const [newNoteContent, setNewNoteContent] = useState('');
@@ -154,7 +154,7 @@ const Sidebar: React.FC<SidebarProps> = ({ events, caseDetails, isOpen, notes, o
                 {activeTab === 'witnesses' && (
                     <div className="p-6 space-y-4">
                         <div className="text-xs text-slate-400 mb-2">Available Witnesses</div>
-                        {WITNESS_DATA.map((witness) => (
+                        {witnesses.map((witness) => (
                             <div key={witness.id} className="bg-slate-800/30 border border-slate-700/50 rounded-xl overflow-hidden hover:border-accent-primary/30 transition-all">
                                 <div className="p-4 cursor-pointer" onClick={() => setSelectedWitnessId(selectedWitnessId === witness.id ? null : witness.id)}>
                                     <div className="flex justify-between items-start">

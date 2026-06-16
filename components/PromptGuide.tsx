@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PromptCategory, PromptTemplate } from '../types';
+import { PromptCategory, PromptTemplate } from '../services/types';
 import { ChevronRight, ChevronDown, X } from 'lucide-react';
 
 interface PromptGuideProps {
